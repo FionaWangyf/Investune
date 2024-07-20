@@ -79,7 +79,9 @@ if prompt := st.chat_input("Ask us!!"):
     response = ""
     try:
         prompt = str(prompt).strip()
+        print("Prompt:", prompt)
         psplit = prompt.split()
+        print("Psplit:", psplit)
         ticker = None
         # 处理问候
         if len(psplit) == 1 and (prompt in greeting_words):
@@ -110,21 +112,27 @@ if prompt := st.chat_input("Ask us!!"):
                     st.session_state.recent_data = {"table": data, "chart": closing_data}
         
         # 处理最近数据请求
-        elif len(psplit) > 1 and any(word in psplit for word in asking_words) and (set(psplit) & recent_data_words) and ("data" in psplit):
+        elif len(psplit) > 1 and (set(psplit) & set(asking_words)) and (set(psplit) & recent_data_words) and ("data" in psplit):
             response = "I will get the data for you, can you provide me with the ticker please?"
             print(response)
+            with st.chat_message("assistant"):
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         
         # 处理使用策略的历史数据请求
         elif any(word in psplit for word in asking_words) and (set(psplit) & previous_data_words) and ("data" in psplit):
             response = "I ran four strategies and this one gives the best results"
             print(response)
+            with st.chat_message("assistant"):  
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         
         # 处理未来数据预测请求
         elif any(word in psplit for word in asking_words) and (set(psplit) & future_data_words) and ("data" in psplit):
             response = "Sure, I run 3 models and this model has given the best results."
             print(response)
+            with st.chat_message("assistant"):
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         
         # 处理情感分析请求
@@ -136,16 +144,17 @@ if prompt := st.chat_input("Ask us!!"):
     
             else:
                 response = "Please provide a ticker symbol first."
-
             with st.chat_message("assistant"):
                 st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
-        
+
+            
         # 处理小问题，如新闻或主要持有人
         elif any(words in psplit for words in small_ques_words):
 
+            
             if "news" in psplit or "news?" in psplit or "News" in psplit:
                 ticker = st.session_state.ticker
+                print(ticker)
                 response = f"Here are the top five recent news items for {ticker} from Yahoo Finance."
                 with st.chat_message("assistant"):
                     st.markdown(response)
@@ -177,10 +186,13 @@ if prompt := st.chat_input("Ask us!!"):
                     tick_major_holdings = tick_info.major_holders
                     st.table(tick_major_holdings)
                 st.session_state.messages.append({"role": "assistant", "content": response, "Table": {"table": tick_instholders}})
+
+            with st.chat_message("assistant"):
+                st.markdown(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
         
         else:
-            
-            client = ZhipuAI(api_key="6ea56f68a2bebbc2ec080aed74bb3c91.MlCVGCabT8qyt1BD") # 填写您自己的APIKey
+            client = ZhipuAI(api_key="5dc5a779e6d252c9d2bed278353532dc.MXUi987YmKPPYlqn") # 填写您自己的APIKey
             response = client.chat.completions.create(
                 model="glm-4",  # 填写需要调用的模型名称
                 messages=[
@@ -202,9 +214,11 @@ if prompt := st.chat_input("Ask us!!"):
             with st.chat_message("assistant"):
                 st.markdown(response)
         '''
+        
 
-    except Exception as e:
+    except EOFError as e:
         error_message = "I'm sorry, I couldn't process your request. Could you please try again?"
         st.session_state.messages.append({"role": "assistant", "content": error_message})
         with st.chat_message("assistant"):
             st.markdown(error_message)
+

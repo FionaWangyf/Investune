@@ -1,0 +1,54 @@
+AAPL comparison
+LSTM - MAE: 20.9249, RMSE: 23.7618
+Transformer - MAE: 56.0533, RMSE: 59.2178
+XGBoost - MAE: 17.7477, RMSE: 20.8459
+
+ORCL comparison
+LSTM - MAE: 7.0056, RMSE: 8.6476
+Transformer - MAE: 35.2578, RMSE: 36.4277
+XGBoost - MAE: 11.8392, RMSE: 12.7481ORCL comparison
+
+MSFT comparison
+LSTM - MAE: 14.5502, RMSE: 17.0651
+Transformer - MAE: 135.2935, RMSE: 135.9681
+XGBoost - MAE: 39.8354, RMSE: 43.0897
+
+CSCO comparison
+LSTM - MAE: 0.6954, RMSE: 0.8113
+Transformer - MAE: 8.6298, RMSE: 8.6679
+XGBoost - MAE: 1.8220, RMSE: 2.1516
+
+QCOM comparison
+LSTM - MAE: 17.1141, RMSE: 20.6917
+Transformer - MAE: 50.0547, RMSE: 54.0657
+XGBoost - MAE: 26.0475, RMSE: 30.0023
+
+TSLA comparison
+LSTM - MAE: 13.1937, RMSE: 20.5367
+Transformer - MAE: 72.0923, RMSE: 75.1699
+XGBoost - MAE: 19.6941, RMSE: 26.0911
+
+IBM comparison
+LSTM - MAE: 8.0500, RMSE: 9.8798
+Transformer - MAE: 41.4614, RMSE: 42.3437
+XGBoost - MAE: 20.1703, RMSE: 21.0560
+
+GOOGL  comparsion
+LSTM - MAE: 5.2255, RMSE: 6.1757
+Transformer - MAE: 34.3229, RMSE: 35.2974
+XGBoost - MAE: 12.8084, RMSE: 14.1882
+
+META comparison
+LSTM - MAE: 21.2449, RMSE: 25.9719
+Transformer - MAE: 139.0634, RMSE: 143.7850
+XGBoost - MAE: 87.1483, RMSE: 89.0424
+
+NVDA comparison
+LSTM - MAE: 11.5341, RMSE: 13.7625
+Transformer - MAE: 82.0502, RMSE: 83.5964
+XGBoost - MAE: 19.1665, RMSE: 24.3516
+
+AMZN comparison
+LSTM - MAE: 4.5944, RMSE: 5.9053
+Transformer - MAE: 17.7876, RMSE: 18.5989
+XGBoost - MAE: 29.6218, RMSE: 30.1004

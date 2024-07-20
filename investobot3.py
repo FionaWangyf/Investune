@@ -2,6 +2,10 @@ import streamlit as st
 import recentdata
 import yfinance as yfin
 import pandas as pd
+from sentiment_analysis import analyze_stock_sentiment
+from zhipuai import ZhipuAI
+from modelcompare3 import plot_predictions
+from PIL import Image
 
 st.title("Investo-Bot")
 
@@ -24,12 +28,13 @@ Happy Investing!
 """)
 
 # 定义相关关键词
-asking_words = {"what", "What", "Show", "Display", "Give"}
+asking_words = {"what", "What", "Show", "Display", "Give","How"}
 greeting_words = {"hello", "Hello", "hi", "HI", "HELLO"}
 recent_data_words = {"recently", "month", "one", "last month", "recent"}
 previous_data_words = {"previous", "last", "past"}
-future_data_words = {"future", "next"}
+future_data_words = {"future", "next", "predict"}
 small_ques_words = {"Explain", "What", "Tell", "Give"}
+sentiment_words = {"feel", "look", "Feeling", "Look"}
 
 # 初始化会话状态
 if "messages" not in st.session_state:
@@ -45,25 +50,35 @@ if "ticker" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         if message["role"] == "assistant" and "Table" in message:
-           #  with st.chat_message("assistant"):
             st.markdown(message.get("content", ""))
             st.table(message["Table"]["table"])
 
         elif message["role"] == "assistant" and "data" in message:
-            # with st.chat_message("assistant"):
             st.markdown(message.get("content", ""))
             st.table(message["data"]["table"])
             st.line_chart(message["data"]["chart"])
         
         elif message["role"] == "assistant" and "news" in message:
-            # with st.chat_message("assistant"):
             st.markdown(message.get("content", ""))
             for new in message["news"]:
                 st.markdown(new)
+        
+        elif message["role"] == "assistant" and "image" in message:
+            st.markdown(message.get("content", ""))
+            st.image(message["image"])
+        
+        elif message["role"] == "assistant" and "graph" in message:
+            st.markdown(message.get("content", ""))
+            st.pyplot(message["graph"])
 
         else:
-            # with st.chat_message("assistant"):
             st.markdown(message.get("content", ""))
+
+def plot_local_predictions(ticker):
+    image_path = f"{ticker}_pre.png"
+    #image = Image.open(image_path)
+    return image_path
+
 
 # 初始化对话
 if len(st.session_state.messages) == 0:
@@ -72,7 +87,7 @@ if len(st.session_state.messages) == 0:
     st.session_state.messages.append({"role": "assistant", "content": "Hello! How can I help you invest today, or analyze stocks today?"})
 
 # 处理用户输入
-if prompt := st.chat_input("Ask us!!"):
+if prompt := st.chat_input("Ask us!!",key="input"):
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -80,11 +95,16 @@ if prompt := st.chat_input("Ask us!!"):
     response = ""
     try:
         prompt = str(prompt).strip()
-        psplit = prompt.split()
+        print("Prompt:", prompt)
+        global psplit 
+        psplit= prompt.split()
+        print("Psplit:", psplit)
         ticker = None
         # 处理问候
         if len(psplit) == 1 and (prompt in greeting_words):
             response = "Hello human! How can I help you analyze today?"
+            with st.chat_message("assistant"):
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         # 处理股票代码查询
         elif len(psplit) == 1 and prompt.isupper() and prompt[-1].isalpha():
@@ -108,26 +128,70 @@ if prompt := st.chat_input("Ask us!!"):
                     st.session_state.messages.append({"role": "assistant", "content": res, "data": {"table": data, "chart": closing_data}})
                     st.session_state.recent_data = {"table": data, "chart": closing_data}
         
+        elif (any(word in psplit for word in asking_words)) and ("start" in psplit or "new"):
+            response = "I can help you analysis if you provide me with the stock ticker symbol.You can ask me questions below.What recent data of apple?What is the major holders of apple?What is the news of apple?"
+
+
+
+
+
         # 处理最近数据请求
-        elif len(psplit) > 1 and any(word in psplit for word in asking_words) and (set(psplit) & recent_data_words) and ("data" in psplit):
+        elif len(psplit) > 1 and (set(psplit) & set(asking_words)) and (set(psplit) & recent_data_words) and ("data" in psplit):
             response = "I will get the data for you, can you provide me with the ticker please?"
+            #print(response)
+            with st.chat_message("assistant"):
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         
         # 处理使用策略的历史数据请求
         elif any(word in psplit for word in asking_words) and (set(psplit) & previous_data_words) and ("data" in psplit):
             response = "I ran four strategies and this one gives the best results"
+            #print(response)
+            with st.chat_message("assistant"):  
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
         
         # 处理未来数据预测请求
         elif any(word in psplit for word in asking_words) and (set(psplit) & future_data_words) and ("data" in psplit):
             response = "Sure, I run 3 models and this model has given the best results."
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            ticker = st.session_state.ticker
+            
+            with st.spinner("Predicting future data..."):
+                if ticker in ["AAPL", "AMZN", "CSCO", "GOOGL", "MSFT", "IBM", "META", "NVDA", "ORCL", "QCOM", "TSLA"]:
+                    fig = plot_local_predictions(ticker)  # 假设有一个plot_local_predictions函数来打印本地的预测图表
+                    #print(fig)
+                    with st.chat_message("assistant"):
+                        st.markdown(response)
+                        st.image(fig)
+                    st.session_state.messages.append({"role": "assistant", "content": response, "image": fig})
+                else:
+                # 否则，调用modelcompare3.py中的plot_predictions函数并打印预测图表
+                    from modelcompare3 import plot_predictions
+                    fig = plot_predictions(ticker)
+                    with st.chat_message("assistant"):
+                        st.markdown(response)
+                        st.pyplot(fig)  # 使用streamlit显示图表
+                    st.session_state.messages.append({"role": "assistant", "content": response, "graph": fig})
         
+        # 处理情感分析请求
+        elif any(word in psplit for word in sentiment_words):
+            ticker = st.session_state.ticker
+            if ticker:
+                sentiment = analyze_stock_sentiment(ticker)
+                response = f"The sentiment for stock {ticker} is {sentiment}."
+    
+            else:
+                response = "Please provide a ticker symbol first."
+            with st.chat_message("assistant"):
+                st.markdown(response)
+
+            
         # 处理小问题，如新闻或主要持有人
         elif any(words in psplit for words in small_ques_words):
 
             if "news" in psplit or "news?" in psplit or "News" in psplit:
                 ticker = st.session_state.ticker
+                #print(ticker)
                 response = f"Here are the top five recent news items for {ticker} from Yahoo Finance."
                 with st.chat_message("assistant"):
                     st.markdown(response)
@@ -142,7 +206,7 @@ if prompt := st.chat_input("Ask us!!"):
                         text = f"{i+1}) {heading_title}: [link]({tlink})"
                         news_list.append(text)
                         st.markdown(text)
-                        st.markdown(tlink,unsafe_allow_html=True)
+                        st.markdown(tlink, unsafe_allow_html=True)
                 
                 st.session_state.messages.append({"role": "assistant", "content": response, "news": news_list})
 
@@ -159,18 +223,40 @@ if prompt := st.chat_input("Ask us!!"):
                     tick_major_holdings = tick_info.major_holders
                     st.table(tick_major_holdings)
                 st.session_state.messages.append({"role": "assistant", "content": response, "Table": {"table": tick_instholders}})
+
+            with st.chat_message("assistant"):
+                st.markdown(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
+
         
         else:
+            client = ZhipuAI(api_key="5dc5a779e6d252c9d2bed278353532dc.MXUi987YmKPPYlqn") # 填写您自己的APIKey
+            response = client.chat.completions.create(
+                model="glm-4",  # 填写需要调用的模型名称
+                messages=[
+                    {"role": "system", "content": "你是investobot，是一个金融方面的专家，请从经济学的专业角度回答问题，你的目标是帮助投资新手提供各种信息的建议。之后的所有的回答的提问都将使用英文"},
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            #print(response.choices[0].message)
+            with st.chat_message("assistant"):
+                st.markdown(response.choices[0].message.content)
+            '''
             response = "I'm not sure how to respond to that."
+            with st.chat_message("assistant"):
+                st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
+            '''
+        '''
+        if response:
+            with st.chat_message("assistant"):
+                st.markdown(response)
+        '''
         
-        # 显示助手的响应
-        #if response:
-        #    with st.chat_message("assistant"):
-        #        st.markdown(response)
 
-    except Exception as e:
+    except EOFError as e:
         error_message = "I'm sorry, I couldn't process your request. Could you please try again?"
         st.session_state.messages.append({"role": "assistant", "content": error_message})
         with st.chat_message("assistant"):
             st.markdown(error_message)
+
